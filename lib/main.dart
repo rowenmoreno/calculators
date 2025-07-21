@@ -1,7 +1,10 @@
 
 import 'package:calculators/features/loan/loan_calculator_screen.dart';
 import 'package:calculators/features/retirement/retirement_calculator_screen.dart';
+import 'package:calculators/features/retirement_savings/retirement_savings_screen.dart';
 import 'package:flutter/material.dart';
+import 'features/retirement_planner/retirement_planner_screen.dart';
+import 'package:calculators/features/social_security/social_security_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -14,7 +17,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Calculators',
       theme: ThemeData(
         // This is the theme of your application.
         //
@@ -87,6 +90,30 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  void _navigateToRetirementPlanner() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const RetirementPlannerScreen(),
+      ),
+    );
+  }
+
+  void _navigateToRetirementSavingsPlanner() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const RetirementSavingsScreen(),
+      ),
+    );
+  }
+
+  void _navigateToSocialSecurityCalculator() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const SocialSecurityScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -126,12 +153,27 @@ class _MyHomePageState extends State<MyHomePage> {
           children: <Widget>[
             ElevatedButton(
               onPressed: _navigateToLoanCalculator,
-              child: const Text('Open Loan Calculator'),
+              child: const Text('Loan Calculator'),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _navigateToRetirementCalculator,
-              child: const Text('Open Retirement Calculator'),
+              child: const Text('Retirement Calculator'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _navigateToRetirementPlanner,
+              child: const Text('Retirement Planner'),
+            ),
+             const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _navigateToRetirementSavingsPlanner,
+              child: const Text('Retirement Savings Planner'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _navigateToSocialSecurityCalculator,
+              child: const Text('Social Security Calculator'),
             ),
           ],
         ),

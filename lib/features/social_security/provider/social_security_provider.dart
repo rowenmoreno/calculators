@@ -50,7 +50,7 @@ class SocialSecurityProvider extends ChangeNotifier {
     double replacementPercent = combinedIncome > 0 ? (ssBenefit / combinedIncome) * 100 : 0;
 
     resultSummary =
-        'It appears that Social Security will replace approximately ${replacementPercent.toStringAsFixed(0)}% of your current combined income of \\$${combinedIncome.toStringAsFixed(0)}.';
+        'It appears that Social Security will replace approximately ${replacementPercent.toStringAsFixed(0)}% of your current combined income of \$${combinedIncome.toStringAsFixed(0)}.';
     notifyListeners();
   }
 

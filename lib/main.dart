@@ -1,5 +1,7 @@
+
+import 'package:calculators/features/loan/loan_calculator_screen.dart';
+import 'package:calculators/features/retirement/retirement_calculator_screen.dart';
 import 'package:flutter/material.dart';
-import 'loan_calculator_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -77,6 +79,14 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  void _navigateToRetirementCalculator() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const RetirementCalculatorScreen(),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called, for instance as done
@@ -117,6 +127,11 @@ class _MyHomePageState extends State<MyHomePage> {
             ElevatedButton(
               onPressed: _navigateToLoanCalculator,
               child: const Text('Open Loan Calculator'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _navigateToRetirementCalculator,
+              child: const Text('Open Retirement Calculator'),
             ),
           ],
         ),

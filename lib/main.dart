@@ -9,8 +9,6 @@ import 'package:calculators/features/credit_card/credit_card_calculator_screen.d
 import 'package:calculators/features/four_o_one_k/four_o_one_k_calculator_screen.dart';
 import 'package:calculators/features/investment_growth/investment_growth_calculator_screen.dart';
 import 'package:calculators/features/payroll_withholdings/payroll_withholdings_calculator_screen.dart';
-import 'package:provider/provider.dart';
-
 void main() {
   runApp(const MyApp());
 }

@@ -1,25 +1,125 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'provider/retirement_calculator_provider.dart';
 
-class RetirementCalculatorScreen extends StatelessWidget {
-  const RetirementCalculatorScreen({Key? key}) : super(key: key);
+class RetirementData {
+  String figuresType = 'Monthly';
+  int currentStep = 0;
+  String? resultSummary;
+  
+  final Map<String, TextEditingController> incomeControllers = {};
+  final Map<String, TextEditingController> expenseControllers = {};
+  
+  final List<String> incomeFields = [
+    'Salary',
+    'Investment Income',
+    'Pension',
+    'Social Security',
+    'Other Income'
+  ];
+  
+  final List<String> expenseFields = [
+    'Housing',
+    'Transportation',
+    'Healthcare',
+    'Food & Dining',
+    'Entertainment',
+    'Insurance',
+    'Other Expenses'
+  ];
 
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => RetirementCalculatorProvider(),
-      child: const _RetirementCalculatorView(),
-    );
+  RetirementData() {
+    for (var field in incomeFields) {
+      incomeControllers[field + '_pre'] = TextEditingController();
+      incomeControllers[field + '_post'] = TextEditingController();
+    }
+    for (var field in expenseFields) {
+      expenseControllers[field + '_pre'] = TextEditingController();
+      expenseControllers[field + '_post'] = TextEditingController();
+    }
+  }
+
+  void dispose() {
+    for (var controller in [...incomeControllers.values, ...expenseControllers.values]) {
+      controller.dispose();
+    }
+  }
+
+  void setStep(int step) {
+    if (step >= 0 && step <= 2) {
+      currentStep = step;
+    }
+  }
+
+  void nextStep() {
+    if (currentStep < 2) {
+      currentStep++;
+    }
+  }
+
+  void prevStep() {
+    if (currentStep > 0) {
+      currentStep--;
+    }
+  }
+
+  void setFiguresType(String type) {
+    figuresType = type;
+  }
+
+  void calculateResult() {
+    double totalPreIncome = 0;
+    double totalPostIncome = 0;
+    double totalPreExpenses = 0;
+    double totalPostExpenses = 0;
+
+    for (var field in incomeFields) {
+      totalPreIncome += double.tryParse(incomeControllers[field + '_pre']?.text ?? '0') ?? 0;
+      totalPostIncome += double.tryParse(incomeControllers[field + '_post']?.text ?? '0') ?? 0;
+    }
+
+    for (var field in expenseFields) {
+      totalPreExpenses += double.tryParse(expenseControllers[field + '_pre']?.text ?? '0') ?? 0;
+      totalPostExpenses += double.tryParse(expenseControllers[field + '_post']?.text ?? '0') ?? 0;
+    }
+
+    double preRetirementNet = totalPreIncome - totalPreExpenses;
+    double postRetirementNet = totalPostIncome - totalPostExpenses;
+    double difference = postRetirementNet - preRetirementNet;
+
+    resultSummary = '''
+    ${figuresType} Summary:
+    Pre-Retirement:
+      Total Income: \$${totalPreIncome.toStringAsFixed(2)}
+      Total Expenses: \$${totalPreExpenses.toStringAsFixed(2)}
+      Net: \$${preRetirementNet.toStringAsFixed(2)}
+      
+    Post-Retirement:
+      Total Income: \$${totalPostIncome.toStringAsFixed(2)}
+      Total Expenses: \$${totalPostExpenses.toStringAsFixed(2)}
+      Net: \$${postRetirementNet.toStringAsFixed(2)}
+      
+    Difference in Net: \$${difference.toStringAsFixed(2)}
+    ''';
   }
 }
 
-class _RetirementCalculatorView extends StatelessWidget {
-  const _RetirementCalculatorView({Key? key}) : super(key: key);
+class RetirementCalculatorScreen extends StatefulWidget {
+  const RetirementCalculatorScreen({Key? key}) : super(key: key);
+
+  @override
+  State<RetirementCalculatorScreen> createState() => _RetirementCalculatorScreenState();
+}
+
+class _RetirementCalculatorScreenState extends State<RetirementCalculatorScreen> {
+  final data = RetirementData();
+
+  @override
+  void dispose() {
+    data.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<RetirementCalculatorProvider>(context);
     return Scaffold(
       appBar: AppBar(title: const Text('Retirement Calculator')),
       body: Padding(
@@ -35,28 +135,28 @@ class _RetirementCalculatorView extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: provider.currentStep == i ? Colors.teal : Colors.grey[300],
-                        foregroundColor: provider.currentStep == i ? Colors.white : Colors.black,
+                        backgroundColor: data.currentStep == i ? Colors.teal : Colors.grey[300],
+                        foregroundColor: data.currentStep == i ? Colors.white : Colors.black,
                       ),
-                      onPressed: () => provider.setStep(i),
+                      onPressed: () => setState(() => data.setStep(i)),
                       child: Text('Part ${i + 1}'),
                     ),
                   ),
               ],
             ),
             const SizedBox(height: 16),
-            Expanded(child: SingleChildScrollView(child: _buildStepContent(context, provider))),
+            Expanded(child: SingleChildScrollView(child: _buildStepContent(context))),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                if (provider.currentStep > 0)
+                if (data.currentStep > 0)
                   ElevatedButton(
-                    onPressed: provider.prevStep,
+                    onPressed: () => setState(() => data.prevStep()),
                     child: const Text('Previous'),
                   ),
-                if (provider.currentStep < 2)
+                if (data.currentStep < 2)
                   ElevatedButton(
-                    onPressed: provider.nextStep,
+                    onPressed: () => setState(() => data.nextStep()),
                     child: const Text('Next'),
                   ),
               ],
@@ -67,8 +167,8 @@ class _RetirementCalculatorView extends StatelessWidget {
     );
   }
 
-  Widget _buildStepContent(BuildContext context, RetirementCalculatorProvider provider) {
-    switch (provider.currentStep) {
+  Widget _buildStepContent(BuildContext context) {
+    switch (data.currentStep) {
       case 0:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,10 +181,10 @@ class _RetirementCalculatorView extends StatelessWidget {
                 const Text('Monthly or annual figures?'),
                 const SizedBox(width: 16),
                 DropdownButton<String>(
-                  value: provider.figuresType,
+                  value: data.figuresType,
                   items: const [DropdownMenuItem(value: 'Monthly', child: Text('Monthly')), DropdownMenuItem(value: 'Annual', child: Text('Annual'))],
                   onChanged: (val) {
-                    if (val != null) provider.setFiguresType(val);
+                    if (val != null) setState(() => data.setFiguresType(val));
                   },
                 ),
               ],
@@ -109,22 +209,24 @@ class _RetirementCalculatorView extends StatelessWidget {
                   const Center(child: Text('Pre-Retirement')),
                   const Center(child: Text('Post-Retirement')),
                 ]),
-                ...provider.incomeFields.map((field) => TableRow(children: [
+                ...data.incomeFields.map((field) => TableRow(children: [
                   Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(field)),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: TextField(
-                      controller: provider.incomeControllers[field + '_pre'],
+                      controller: data.incomeControllers[field + '_pre'],
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(border: OutlineInputBorder()),
+                      onChanged: (_) => setState(() => data.calculateResult()),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: TextField(
-                      controller: provider.incomeControllers[field + '_post'],
+                      controller: data.incomeControllers[field + '_post'],
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(border: OutlineInputBorder()),
+                      onChanged: (_) => setState(() => data.calculateResult()),
                     ),
                   ),
                 ])),
@@ -150,22 +252,24 @@ class _RetirementCalculatorView extends StatelessWidget {
                   const Center(child: Text('Pre-Retirement')),
                   const Center(child: Text('Post-Retirement')),
                 ]),
-                ...provider.expenseFields.map((field) => TableRow(children: [
+                ...data.expenseFields.map((field) => TableRow(children: [
                   Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(field)),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: TextField(
-                      controller: provider.expenseControllers[field + '_pre'],
+                      controller: data.expenseControllers[field + '_pre'],
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(border: OutlineInputBorder()),
+                      onChanged: (_) => setState(() => data.calculateResult()),
                     ),
                   ),
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: TextField(
-                      controller: provider.expenseControllers[field + '_post'],
+                      controller: data.expenseControllers[field + '_post'],
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(border: OutlineInputBorder()),
+                      onChanged: (_) => setState(() => data.calculateResult()),
                     ),
                   ),
                 ])),
@@ -174,16 +278,16 @@ class _RetirementCalculatorView extends StatelessWidget {
             const SizedBox(height: 24),
             Center(
               child: ElevatedButton(
-                onPressed: provider.calculateResult,
+                onPressed: () => setState(() => data.calculateResult()),
                 child: const Text('Calculate'),
               ),
             ),
-            if (provider.resultSummary != null) ...[
+            if (data.resultSummary != null) ...[
               const SizedBox(height: 16),
               Divider(),
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 12.0),
-                child: Text(provider.resultSummary!),
+                child: Text(data.resultSummary!),
               ),
               Center(
                 child: ElevatedButton(

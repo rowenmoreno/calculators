@@ -1,25 +1,94 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'provider/retirement_savings_provider.dart';
 
-class RetirementSavingsScreen extends StatelessWidget {
-  const RetirementSavingsScreen({Key? key}) : super(key: key);
+class RetirementSavingsData {
+  int currentStep = 0;
+  final TextEditingController ageController = TextEditingController();
+  final TextEditingController annualIncomeController = TextEditingController();
+  final TextEditingController spouseIncomeController = TextEditingController();
+  final TextEditingController savingsBalanceController = TextEditingController();
+  final TextEditingController annualSavingsController = TextEditingController();
+  final TextEditingController annualSavingsIncreaseController = TextEditingController();
+  final TextEditingController pensionBenefitController = TextEditingController();
+  final TextEditingController inflationController = TextEditingController();
+  final TextEditingController retirementAgeController = TextEditingController();
+  final TextEditingController yearsOfRetirementController = TextEditingController();
+  final TextEditingController incomeReplacementController = TextEditingController();
+  final TextEditingController preRetReturnController = TextEditingController();
+  final TextEditingController postRetReturnController = TextEditingController();
+  final TextEditingController ssOverrideController = TextEditingController();
+  
+  String pensionInflation = 'No';
+  String includeSS = 'No';
+  String maritalStatus = 'Single';
+  final List<String> yesNoOptions = ['Yes', 'No'];
+  final List<String> maritalStatusOptions = ['Single', 'Married'];
 
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => RetirementSavingsProvider(),
-      child: const _RetirementPlannerView(),
-    );
+  void setStep(int step) {
+    if (step >= 0 && step <= 3) {
+      currentStep = step;
+    }
+  }
+
+  void nextStep() {
+    if (currentStep < 3) {
+      currentStep++;
+    }
+  }
+
+  void prevStep() {
+    if (currentStep > 0) {
+      currentStep--;
+    }
+  }
+
+  void setPensionInflation(String value) {
+    pensionInflation = value;
+  }
+
+  void setIncludeSS(String value) {
+    includeSS = value;
+  }
+
+  void setMaritalStatus(String value) {
+    maritalStatus = value;
+  }
+
+  void dispose() {
+    ageController.dispose();
+    annualIncomeController.dispose();
+    spouseIncomeController.dispose();
+    savingsBalanceController.dispose();
+    annualSavingsController.dispose();
+    annualSavingsIncreaseController.dispose();
+    pensionBenefitController.dispose();
+    inflationController.dispose();
+    retirementAgeController.dispose();
+    yearsOfRetirementController.dispose();
+    incomeReplacementController.dispose();
+    preRetReturnController.dispose();
+    postRetReturnController.dispose();
+    ssOverrideController.dispose();
   }
 }
 
-class _RetirementPlannerView extends StatelessWidget {
-  const _RetirementPlannerView({Key? key}) : super(key: key);
+class RetirementSavingsScreen extends StatefulWidget {
+  const RetirementSavingsScreen({Key? key}) : super(key: key);
+
+  @override
+  State<RetirementSavingsScreen> createState() => _RetirementSavingsScreenState();
+}
+
+class _RetirementSavingsScreenState extends State<RetirementSavingsScreen> {
+  final data = RetirementSavingsData();
+
+  @override
+  void dispose() {
+    data.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<RetirementSavingsProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Retirement Savings Planner'),
@@ -29,22 +98,22 @@ class _RetirementPlannerView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildStepper(provider),
+            _buildStepper(),
             const SizedBox(height: 16),
             Expanded(
               child: SingleChildScrollView(
-                child: _buildStepContent(context, provider),
+                child: _buildStepContent(context),
               ),
             ),
             const SizedBox(height: 16),
-            _buildNavigation(context, provider),
+            _buildNavigation(context),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildStepper(RetirementSavingsProvider provider) {
+  Widget _buildStepper() {
     final steps = ['Income/Savings', 'Pension', 'Assumptions', 'Social Security'];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -56,12 +125,12 @@ class _RetirementPlannerView extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: provider.currentStep == i ? Colors.teal : Colors.grey[300],
-                  foregroundColor: provider.currentStep == i ? Colors.white : Colors.black,
+                  backgroundColor: data.currentStep == i ? Colors.teal : Colors.grey[300],
+                  foregroundColor: data.currentStep == i ? Colors.white : Colors.black,
                   elevation: 0,
                   textStyle: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                onPressed: () => provider.setStep(i),
+                onPressed: () => setState(() => data.setStep(i)),
                 child: Text(steps[i]),
               ),
             ),
@@ -70,47 +139,47 @@ class _RetirementPlannerView extends StatelessWidget {
     );
   }
 
-  Widget _buildStepContent(BuildContext context, RetirementSavingsProvider provider) {
-    switch (provider.currentStep) {
+  Widget _buildStepContent(BuildContext context) {
+    switch (data.currentStep) {
       case 0:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTextField('Your current age (1 to 120)', provider.ageController),
-            _buildTextField('Current annual income (\$)', provider.annualIncomeController),
-            _buildTextField("Spouse's annual income (if applicable) (\$)", provider.spouseIncomeController),
-            _buildTextField('Current retirement savings balance (\$)', provider.savingsBalanceController),
-            _buildTextField('Current annual savings amount (\$ or percent of income)', provider.annualSavingsController),
-            _buildTextField('Current annual savings increases (0% to 10%)', provider.annualSavingsIncreaseController),
+            _buildTextField('Your current age (1 to 120)', data.ageController),
+            _buildTextField('Current annual income (\$)', data.annualIncomeController),
+            _buildTextField("Spouse's annual income (if applicable) (\$)", data.spouseIncomeController),
+            _buildTextField('Current retirement savings balance (\$)', data.savingsBalanceController),
+            _buildTextField('Current annual savings amount (\$ or percent of income)', data.annualSavingsController),
+            _buildTextField('Current annual savings increases (0% to 10%)', data.annualSavingsIncreaseController),
           ],
         );
       case 1:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTextField('Annual pension benefit at retirement (\$)', provider.pensionBenefitController),
-            _buildDropdown('Pension increases with inflation?', provider.pensionInflation, provider.yesNoOptions, provider.setPensionInflation),
+            _buildTextField('Annual pension benefit at retirement (\$)', data.pensionBenefitController),
+            _buildDropdown('Pension increases with inflation?', data.pensionInflation, data.yesNoOptions, (val) => setState(() => data.setPensionInflation(val))),
           ],
         );
       case 2:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTextField('Expected inflation (0% to 10%)', provider.inflationController),
-            _buildTextField('Desired retirement age (1 to 120)', provider.retirementAgeController),
-            _buildTextField('Number of years of retirement income (1 to 40)', provider.yearsOfRetirementController),
-            _buildTextField('Income replacement at retirement (0% to 300%)', provider.incomeReplacementController),
-            _buildTextField('Pre-retirement investment return (-12% to 12%)', provider.preRetReturnController),
-            _buildTextField('Post-retirement investment return (-12% to 12%)', provider.postRetReturnController),
+            _buildTextField('Expected inflation (0% to 10%)', data.inflationController),
+            _buildTextField('Desired retirement age (1 to 120)', data.retirementAgeController),
+            _buildTextField('Number of years of retirement income (1 to 40)', data.yearsOfRetirementController),
+            _buildTextField('Income replacement at retirement (0% to 300%)', data.incomeReplacementController),
+            _buildTextField('Pre-retirement investment return (-12% to 12%)', data.preRetReturnController),
+            _buildTextField('Post-retirement investment return (-12% to 12%)', data.postRetReturnController),
           ],
         );
       case 3:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildDropdown('Include Social Security benefits?', provider.includeSS, provider.yesNoOptions, provider.setIncludeSS),
-            _buildDropdown('Marital status', provider.maritalStatus, provider.maritalStatusOptions, provider.setMaritalStatus, enabled: provider.includeSS == 'Yes'),
-            _buildTextField('Social Security override amount (monthly amount in today\'s dollars) ( 4)', provider.ssOverrideController, enabled: provider.includeSS == 'Yes'),
+            _buildDropdown('Include Social Security benefits?', data.includeSS, data.yesNoOptions, (val) => setState(() => data.setIncludeSS(val))),
+            _buildDropdown('Marital status', data.maritalStatus, data.maritalStatusOptions, (val) => setState(() => data.setMaritalStatus(val)), enabled: data.includeSS == 'Yes'),
+            _buildTextField('Social Security override amount (monthly amount in today\'s dollars) (\$)', data.ssOverrideController, enabled: data.includeSS == 'Yes'),
           ],
         );
       default:
@@ -153,13 +222,13 @@ class _RetirementPlannerView extends StatelessWidget {
     );
   }
 
-  Widget _buildNavigation(BuildContext context, RetirementSavingsProvider provider) {
+  Widget _buildNavigation(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        if (provider.currentStep > 0)
+        if (data.currentStep > 0)
           ElevatedButton(
-            onPressed: provider.prevStep,
+            onPressed: () => setState(() => data.prevStep()),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.teal,
               foregroundColor: Colors.white,
@@ -167,9 +236,9 @@ class _RetirementPlannerView extends StatelessWidget {
             ),
             child: const Text('Previous'),
           ),
-        if (provider.currentStep < 3)
+        if (data.currentStep < 3)
           ElevatedButton(
-            onPressed: provider.nextStep,
+            onPressed: () => setState(() => data.nextStep()),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.teal,
               foregroundColor: Colors.white,
@@ -177,7 +246,7 @@ class _RetirementPlannerView extends StatelessWidget {
             ),
             child: const Text('Next'),
           ),
-        if (provider.currentStep == 3)
+        if (data.currentStep == 3)
           ElevatedButton(
             onPressed: () {
               // TODO: Implement calculation and result display

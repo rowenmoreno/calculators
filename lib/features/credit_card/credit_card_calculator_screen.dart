@@ -1,28 +1,54 @@
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'provider/credit_card_calculator_provider.dart';
 
-class CreditCardCalculatorScreen extends StatelessWidget {
+import 'package:flutter/material.dart';
+import 'credit_card_calculator_data.dart';
+
+// Extracted calculation function
+class CreditCardCalculationResult {
+  final int months;
+  final double years;
+  final double totalInterest;
+  CreditCardCalculationResult({required this.months, required this.years, required this.totalInterest});
+}
+
+CreditCardCalculationResult calculateCreditCardPayoff({
+  required double balance,
+  required double apr,
+  required double additionalPayment,
+  required double minPercent,
+  required double minAmount,
+  required bool skipDecember,
+}) {
+  final monthlyRate = apr / 100 / 12;
+  double currentBalance = balance;
+  int months = 0;
+  double totalInterest = 0;
+  while (currentBalance > 0.01 && months < 1000) {
+    months++;
+    if (skipDecember && months % 12 == 0) {
+      continue;
+    }
+    double minPayment = (currentBalance * minPercent / 100).clamp(minAmount, double.infinity);
+    double payment = minPayment + additionalPayment;
+    if (payment > currentBalance) payment = currentBalance;
+    double interest = currentBalance * monthlyRate;
+    totalInterest += interest;
+    currentBalance += interest;
+    currentBalance -= payment;
+  }
+  double years = months / 12.0;
+  return CreditCardCalculationResult(months: months, years: years, totalInterest: totalInterest);
+}
+
+class CreditCardCalculatorScreen extends StatefulWidget {
   const CreditCardCalculatorScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => CreditCardCalculatorProvider(),
-      child: const CreditCardCalculatorForm(),
-    );
-  }
+  State<CreditCardCalculatorScreen> createState() => _CreditCardCalculatorScreenState();
 }
 
-class CreditCardCalculatorForm extends StatefulWidget {
-  const CreditCardCalculatorForm({super.key});
-
-  @override
-  State<CreditCardCalculatorForm> createState() => _CreditCardCalculatorFormState();
-}
-
-class _CreditCardCalculatorFormState extends State<CreditCardCalculatorForm> {
+class _CreditCardCalculatorScreenState extends State<CreditCardCalculatorScreen> {
   int _tabIndex = 0;
+  final CreditCardCalculatorData data = CreditCardCalculatorData();
 
   void setTabIndex(int index) {
     setState(() {
@@ -32,7 +58,6 @@ class _CreditCardCalculatorFormState extends State<CreditCardCalculatorForm> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<CreditCardCalculatorProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Credit Card Calculator'),
@@ -45,28 +70,37 @@ class _CreditCardCalculatorFormState extends State<CreditCardCalculatorForm> {
                 child: TabButton(
                   text: 'Credit Card Information',
                   selected: _tabIndex == 0,
-                  onTap: () => setState(() => _tabIndex = 0),
+                  onTap: () => setTabIndex(0),
                 ),
               ),
               Expanded(
                 child: TabButton(
                   text: 'Assumptions',
                   selected: _tabIndex == 1,
-                  onTap: () => setState(() => _tabIndex = 1),
+                  onTap: () => setTabIndex(1),
                 ),
               ),
             ],
           ),
           Expanded(
             child: _tabIndex == 0
-                ? CreditCardInfoTab(provider: provider)
-                : AssumptionsTab(provider: provider),
+                ? CreditCardInfoTab(
+                    data: data,
+                    onChanged: () => setState(() {}),
+                    onNext: () => setTabIndex(1),
+                  )
+                : AssumptionsTab(
+                    data: data,
+                    onChanged: () => setState(() {}),
+                    onPrevious: () => setTabIndex(0),
+                  ),
           ),
         ],
       ),
     );
   }
 }
+
 
 class TabButton extends StatelessWidget {
   final String text;
@@ -99,8 +133,10 @@ class TabButton extends StatelessWidget {
 }
 
 class CreditCardInfoTab extends StatelessWidget {
-  final CreditCardCalculatorProvider provider;
-  const CreditCardInfoTab({required this.provider, super.key});
+  final CreditCardCalculatorData data;
+  final VoidCallback onChanged;
+  final VoidCallback onNext;
+  const CreditCardInfoTab({required this.data, required this.onChanged, required this.onNext, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -109,26 +145,32 @@ class CreditCardInfoTab extends StatelessWidget {
       child: Column(
         children: [
           TextField(
-            decoration: const InputDecoration(labelText: 'Current credit card balance (\$)'),
+            decoration: const InputDecoration(labelText: 'Current credit card balance (4)'),
             keyboardType: TextInputType.number,
-            onChanged: (v) => provider.updateBalance(double.tryParse(v) ?? 0),
+            onChanged: (v) {
+              data.balance = double.tryParse(v) ?? 0;
+              onChanged();
+            },
           ),
           TextField(
             decoration: const InputDecoration(labelText: 'Annual percentage rate (0% to 40%)'),
             keyboardType: TextInputType.number,
-            onChanged: (v) => provider.updateApr(double.tryParse(v) ?? 0),
+            onChanged: (v) {
+              data.apr = double.tryParse(v) ?? 0;
+              onChanged();
+            },
           ),
           TextField(
-            decoration: const InputDecoration(labelText: 'Proposed additional monthly payment (\$)'),
+            decoration: const InputDecoration(labelText: 'Proposed additional monthly payment (4)'),
             keyboardType: TextInputType.number,
-            onChanged: (v) => provider.updateAdditionalPayment(double.tryParse(v) ?? 0),
+            onChanged: (v) {
+              data.additionalPayment = double.tryParse(v) ?? 0;
+              onChanged();
+            },
           ),
           const Spacer(),
           ElevatedButton(
-            onPressed: () {
-              final parentState = context.findAncestorStateOfType<_CreditCardCalculatorFormState>();
-              parentState?.setTabIndex(1);
-            },
+            onPressed: onNext,
             child: const Text('Next'),
           ),
         ],
@@ -138,8 +180,10 @@ class CreditCardInfoTab extends StatelessWidget {
 }
 
 class AssumptionsTab extends StatelessWidget {
-  final CreditCardCalculatorProvider provider;
-  const AssumptionsTab({required this.provider, super.key});
+  final CreditCardCalculatorData data;
+  final VoidCallback onChanged;
+  final VoidCallback onPrevious;
+  const AssumptionsTab({required this.data, required this.onChanged, required this.onPrevious, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -147,43 +191,11 @@ class AssumptionsTab extends StatelessWidget {
       padding: const EdgeInsets.all(16.0),
       child: Column(
         children: [
-          TextField(
-            decoration: const InputDecoration(labelText: 'Minimum payment percentage (0% to 10%)'),
-            keyboardType: TextInputType.number,
-            onChanged: (v) => provider.updateMinPaymentPercent(double.tryParse(v) ?? 0),
-          ),
-          TextField(
-            decoration: const InputDecoration(labelText: 'Minimum payment amount (\$)'),
-            keyboardType: TextInputType.number,
-            onChanged: (v) => provider.updateMinPaymentAmount(double.tryParse(v) ?? 0),
-          ),
-          DropdownButtonFormField<bool>(
-            decoration: const InputDecoration(labelText: 'Skip December payment when offered?'),
-            value: provider.skipDecember,
-            items: const [
-              DropdownMenuItem(value: false, child: Text('No')),
-              DropdownMenuItem(value: true, child: Text('Yes')),
-            ],
-            onChanged: (v) => provider.updateSkipDecember(v ?? false),
-          ),
-          DropdownButtonFormField<String>(
-            decoration: const InputDecoration(labelText: 'Desired table display'),
-            value: provider.displayType,
-            items: const [
-              DropdownMenuItem(value: 'Yearly', child: Text('Yearly')),
-              DropdownMenuItem(value: 'Monthly', child: Text('Monthly')),
-            ],
-            onChanged: (v) => provider.updateDisplayType(v ?? 'Yearly'),
-          ),
-          const Spacer(),
           Row(
             children: [
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {
-                    final parentState = context.findAncestorStateOfType<_CreditCardCalculatorFormState>();
-                    parentState?.setTabIndex(0);
-                  },
+                  onPressed: onPrevious,
                   child: const Text('Previous'),
                 ),
               ),
@@ -191,39 +203,20 @@ class AssumptionsTab extends StatelessWidget {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    final balance = provider.balance;
-                    final apr = provider.apr;
-                    final additionalPayment = provider.additionalPayment;
-                    final minPercent = provider.minPaymentPercent;
-                    final minAmount = provider.minPaymentAmount;
-                    final skipDecember = provider.skipDecember;
-
-                    // Calculate monthly interest rate
-                    final monthlyRate = apr / 100 / 12;
-                    double currentBalance = balance;
-        int months = 0;
-        double totalInterest = 0;
-        while (currentBalance > 0.01 && months < 1000) {
-                      months++;
-                      // Skip December payment if enabled
-                      if (skipDecember && months % 12 == 0) {
-                        continue;
-                      }
-                      double minPayment = (currentBalance * minPercent / 100).clamp(minAmount, double.infinity);
-                      double payment = minPayment + additionalPayment;
-                      if (payment > currentBalance) payment = currentBalance;
-                      double interest = currentBalance * monthlyRate;
-                      totalInterest += interest;
-                      currentBalance += interest;
-                      currentBalance -= payment;
-                    }
-                    double years = months / 12.0;
+                    final result = calculateCreditCardPayoff(
+                      balance: data.balance,
+                      apr: data.apr,
+                      additionalPayment: data.additionalPayment,
+                      minPercent: data.minPaymentPercent,
+                      minAmount: data.minPaymentAmount,
+                      skipDecember: data.skipDecember,
+                    );
                     showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
                         title: const Text('Result'),
-            content: Text(
-              'By only making minimum payments it will take $months more payments or ${years.toStringAsFixed(1)} years to pay off the remaining balance. Interest will amount to \$${totalInterest.toStringAsFixed(0)}.'
+                        content: Text(
+                          'By only making minimum payments it will take ${result.months} more payments or ${result.years.toStringAsFixed(1)} years to pay off the remaining balance. Interest will amount to \$${result.totalInterest.toStringAsFixed(0)}.'
                         ),
                         actions: [
                           TextButton(

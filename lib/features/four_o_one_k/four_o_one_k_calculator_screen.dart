@@ -1,27 +1,52 @@
-import 'package:calculators/features/four_o_one_k/provider/four_o_one_k_provider.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 
-class FourOOneKCalculatorScreen extends StatelessWidget {
-  const FourOOneKCalculatorScreen({super.key});
+class FourOOneKCalculatorData {
+  double currentAge;
+  double annualContribution;
+  double retirementAge;
+  double yearsToReceiveIncome;
+  double preTaxReturnDistribution;
+  double incomeTaxBracketDistribution;
+  double preTaxReturnAccumulation;
+  double incomeTaxBracketAccumulation;
+  String taxationOption;
 
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => FourOOneKProvider(),
-      child: const FourOOneKCalculatorForm(),
-    );
+  FourOOneKCalculatorData({
+    this.currentAge = 0,
+    this.annualContribution = 0,
+    this.retirementAge = 0,
+    this.yearsToReceiveIncome = 0,
+    this.preTaxReturnDistribution = 0,
+    this.incomeTaxBracketDistribution = 0,
+    this.preTaxReturnAccumulation = 0,
+    this.incomeTaxBracketAccumulation = 0,
+    this.taxationOption = 'Option 1',
+  });
+
+  Map<String, double> calculate() {
+    final contributionYears = retirementAge - currentAge;
+    final annualIncome = annualContribution * 12; // Simplified calculation
+    final monthlyIncome = annualIncome / 12;
+
+    return {
+      'annualContribution': annualContribution,
+      'contributionYears': contributionYears,
+      'annualIncome': annualIncome,
+      'monthlyIncome': monthlyIncome,
+      'distributionYears': yearsToReceiveIncome,
+    };
   }
 }
 
-class FourOOneKCalculatorForm extends StatefulWidget {
-  const FourOOneKCalculatorForm({super.key});
+class FourOOneKCalculatorScreen extends StatefulWidget {
+  const FourOOneKCalculatorScreen({super.key});
 
   @override
-  State<FourOOneKCalculatorForm> createState() => _FourOOneKCalculatorFormState();
+  State<FourOOneKCalculatorScreen> createState() => _FourOOneKCalculatorScreenState();
 }
 
-class _FourOOneKCalculatorFormState extends State<FourOOneKCalculatorForm> {
+class _FourOOneKCalculatorScreenState extends State<FourOOneKCalculatorScreen> {
+  final data = FourOOneKCalculatorData();
   int _tabIndex = 0;
 
   void setTabIndex(int index) {
@@ -32,7 +57,6 @@ class _FourOOneKCalculatorFormState extends State<FourOOneKCalculatorForm> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<FourOOneKProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('401K Calculator'),
@@ -68,9 +92,9 @@ class _FourOOneKCalculatorFormState extends State<FourOOneKCalculatorForm> {
             child: IndexedStack(
               index: _tabIndex,
               children: [
-                SavingsTab(provider: provider, onNext: () => setTabIndex(1)),
-                DistributionTab(provider: provider, onNext: () => setTabIndex(2), onPrevious: () => setTabIndex(0)),
-                AccumulationTab(provider: provider, onPrevious: () => setTabIndex(1)),
+                SavingsTab(data: data, onNext: () => setTabIndex(1)),
+                DistributionTab(data: data, onNext: () => setTabIndex(2), onPrevious: () => setTabIndex(0)),
+                AccumulationTab(data: data, onPrevious: () => setTabIndex(1)),
               ],
             ),
           ),
@@ -111,9 +135,9 @@ class TabButton extends StatelessWidget {
 }
 
 class SavingsTab extends StatelessWidget {
-  final FourOOneKProvider provider;
+  final FourOOneKCalculatorData data;
   final VoidCallback onNext;
-  const SavingsTab({required this.provider, required this.onNext, super.key});
+  const SavingsTab({required this.data, required this.onNext, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -122,16 +146,16 @@ class SavingsTab extends StatelessWidget {
       child: Column(
         children: [
           TextFormField(
-            initialValue: provider.currentAge.toString(),
+            initialValue: data.currentAge.toString(),
             decoration: const InputDecoration(labelText: 'Current age (1 to 120)'),
             keyboardType: TextInputType.number,
-            onChanged: (v) => provider.updateCurrentAge(double.tryParse(v) ?? 0),
+            onChanged: (v) => data.currentAge = double.tryParse(v) ?? 0,
           ),
           TextFormField(
-            initialValue: provider.annualContribution.toString(),
+            initialValue: data.annualContribution.toString(),
             decoration: const InputDecoration(labelText: 'Your annual contribution (\$)'),
             keyboardType: TextInputType.number,
-            onChanged: (v) => provider.updateAnnualContribution(double.tryParse(v) ?? 0),
+            onChanged: (v) => data.annualContribution = double.tryParse(v) ?? 0,
           ),
           const Spacer(),
           ElevatedButton(
@@ -145,10 +169,10 @@ class SavingsTab extends StatelessWidget {
 }
 
 class DistributionTab extends StatelessWidget {
-  final FourOOneKProvider provider;
+  final FourOOneKCalculatorData data;
   final VoidCallback onNext;
   final VoidCallback onPrevious;
-  const DistributionTab({required this.provider, required this.onNext, required this.onPrevious, super.key});
+  const DistributionTab({required this.data, required this.onNext, required this.onPrevious, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -157,28 +181,28 @@ class DistributionTab extends StatelessWidget {
       child: Column(
         children: [
           TextFormField(
-            initialValue: provider.retirementAge.toString(),
+            initialValue: data.retirementAge.toString(),
             decoration: const InputDecoration(labelText: 'Age when income should start (1 to 120)'),
             keyboardType: TextInputType.number,
-            onChanged: (v) => provider.updateRetirementAge(double.tryParse(v) ?? 0),
+            onChanged: (v) => data.retirementAge = double.tryParse(v) ?? 0,
           ),
           TextFormField(
-            initialValue: provider.yearsToReceiveIncome.toString(),
+            initialValue: data.yearsToReceiveIncome.toString(),
             decoration: const InputDecoration(labelText: 'Number of years to receive income (1 to 70)'),
             keyboardType: TextInputType.number,
-            onChanged: (v) => provider.updateYearsToReceiveIncome(double.tryParse(v) ?? 0),
+            onChanged: (v) => data.yearsToReceiveIncome = double.tryParse(v) ?? 0,
           ),
           TextFormField(
-            initialValue: provider.preTaxReturnDistribution.toString(),
+            initialValue: data.preTaxReturnDistribution.toString(),
             decoration: const InputDecoration(labelText: 'Before tax return on savings (distribution phase) (-12% to 12%)'),
             keyboardType: TextInputType.number,
-            onChanged: (v) => provider.updatePreTaxReturnDistribution(double.tryParse(v) ?? 0),
+            onChanged: (v) => data.preTaxReturnDistribution = double.tryParse(v) ?? 0,
           ),
           TextFormField(
-            initialValue: provider.incomeTaxBracketDistribution.toString(),
+            initialValue: data.incomeTaxBracketDistribution.toString(),
             decoration: const InputDecoration(labelText: 'Income tax bracket (distribution phase) (0% to 75%)'),
             keyboardType: TextInputType.number,
-            onChanged: (v) => provider.updateIncomeTaxBracketDistribution(double.tryParse(v) ?? 0),
+            onChanged: (v) => data.incomeTaxBracketDistribution = double.tryParse(v) ?? 0,
           ),
           const Spacer(),
           Row(
@@ -205,9 +229,9 @@ class DistributionTab extends StatelessWidget {
 }
 
 class AccumulationTab extends StatelessWidget {
-  final FourOOneKProvider provider;
+  final FourOOneKCalculatorData data;
   final VoidCallback onPrevious;
-  const AccumulationTab({required this.provider, required this.onPrevious, super.key});
+  const AccumulationTab({required this.data, required this.onPrevious, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -216,25 +240,25 @@ class AccumulationTab extends StatelessWidget {
       child: Column(
         children: [
           TextFormField(
-            initialValue: provider.preTaxReturnAccumulation.toString(),
+            initialValue: data.preTaxReturnAccumulation.toString(),
             decoration: const InputDecoration(labelText: 'Before tax return on savings (accumulation phase) (-12% to 12%)'),
             keyboardType: TextInputType.number,
-            onChanged: (v) => provider.updatePreTaxReturnAccumulation(double.tryParse(v) ?? 0),
+            onChanged: (v) => data.preTaxReturnAccumulation = double.tryParse(v) ?? 0,
           ),
           TextFormField(
-            initialValue: provider.incomeTaxBracketAccumulation.toString(),
+            initialValue: data.incomeTaxBracketAccumulation.toString(),
             decoration: const InputDecoration(labelText: 'Income tax bracket (accumulation phase) (0% to 75%)'),
             keyboardType: TextInputType.number,
-            onChanged: (v) => provider.updateIncomeTaxBracketAccumulation(double.tryParse(v) ?? 0),
+            onChanged: (v) => data.incomeTaxBracketAccumulation = double.tryParse(v) ?? 0,
           ),
           DropdownButtonFormField<String>(
             decoration: const InputDecoration(labelText: 'Taxation of contribution options'),
-            value: provider.taxationOption,
+            value: data.taxationOption,
             items: const [
               DropdownMenuItem(value: 'Option 1', child: Text('Option 1')),
               DropdownMenuItem(value: 'Option 2', child: Text('Option 2')),
             ],
-            onChanged: (v) => provider.updateTaxationOption(v ?? 'Option 1'),
+            onChanged: (v) => data.taxationOption = v ?? 'Option 1',
           ),
           const Spacer(),
           Row(
@@ -249,8 +273,7 @@ class AccumulationTab extends StatelessWidget {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    final provider = Provider.of<FourOOneKProvider>(context, listen: false);
-                    final result = provider.calculate();
+                    final result = data.calculate();
                     final annualContribution = result['annualContribution'] ?? 0;
                     final contributionYears = result['contributionYears'] ?? 0;
                     final annualIncome = result['annualIncome'] ?? 0;

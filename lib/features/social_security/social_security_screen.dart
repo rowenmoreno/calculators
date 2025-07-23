@@ -1,25 +1,73 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'provider/social_security_provider.dart';
 
-class SocialSecurityScreen extends StatelessWidget {
-  const SocialSecurityScreen({Key? key}) : super(key: key);
+class SocialSecurityData {
+  int currentStep = 0;
+  String? resultSummary;
+  
+  final TextEditingController incomeController = TextEditingController();
+  final TextEditingController ageController = TextEditingController();
+  final TextEditingController retirementAgeController = TextEditingController();
+  final TextEditingController spouseIncomeController = TextEditingController();
+  final TextEditingController spouseAgeController = TextEditingController();
+  final TextEditingController spouseRetirementAgeController = TextEditingController();
+  final TextEditingController inflationController = TextEditingController();
 
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => SocialSecurityProvider(),
-      child: const _SocialSecurityView(),
-    );
+  void setStep(int step) {
+    if (step >= 0 && step <= 2) {
+      currentStep = step;
+    }
+  }
+
+  void nextStep() {
+    if (currentStep < 2) {
+      currentStep++;
+    }
+  }
+
+  void prevStep() {
+    if (currentStep > 0) {
+      currentStep--;
+    }
+  }
+
+  void calculateResult() {
+    // TODO: Implement calculation logic
+    resultSummary = '''
+    Based on your inputs:
+    Your monthly benefit: \$${double.tryParse(incomeController.text)?.toStringAsFixed(2) ?? '0.00'}
+    Spouse's monthly benefit: \$${double.tryParse(spouseIncomeController.text)?.toStringAsFixed(2) ?? '0.00'}
+    ''';
+  }
+
+  void dispose() {
+    incomeController.dispose();
+    ageController.dispose();
+    retirementAgeController.dispose();
+    spouseIncomeController.dispose();
+    spouseAgeController.dispose();
+    spouseRetirementAgeController.dispose();
+    inflationController.dispose();
   }
 }
 
-class _SocialSecurityView extends StatelessWidget {
-  const _SocialSecurityView({Key? key}) : super(key: key);
+class SocialSecurityScreen extends StatefulWidget {
+  const SocialSecurityScreen({Key? key}) : super(key: key);
+
+  @override
+  State<SocialSecurityScreen> createState() => _SocialSecurityScreenState();
+}
+
+class _SocialSecurityScreenState extends State<SocialSecurityScreen> {
+  final data = SocialSecurityData();
+
+  @override
+  void dispose() {
+    data.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<SocialSecurityProvider>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text('Social Security Calculator'),
@@ -29,19 +77,19 @@ class _SocialSecurityView extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildStepper(provider),
+            _buildStepper(),
             const SizedBox(height: 16),
             Expanded(
               child: SingleChildScrollView(
-                child: _buildStepContent(context, provider),
+                child: _buildStepContent(context),
               ),
             ),
             const SizedBox(height: 16),
-            _buildNavigation(context, provider),
-            if (provider.resultSummary != null) ...[
+            _buildNavigation(context),
+            if (data.resultSummary != null) ...[
               const SizedBox(height: 24),
               Text(
-                provider.resultSummary!,
+                data.resultSummary!,
                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ],
@@ -51,7 +99,7 @@ class _SocialSecurityView extends StatelessWidget {
     );
   }
 
-  Widget _buildStepper(SocialSecurityProvider provider) {
+  Widget _buildStepper() {
     final steps = ['Your Information', 'Spouse Information (if applicable)', 'Common Assumptions'];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -63,12 +111,12 @@ class _SocialSecurityView extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: provider.currentStep == i ? Colors.teal : Colors.grey[300],
-                  foregroundColor: provider.currentStep == i ? Colors.white : Colors.black,
+                  backgroundColor: data.currentStep == i ? Colors.teal : Colors.grey[300],
+                  foregroundColor: data.currentStep == i ? Colors.white : Colors.black,
                   elevation: 0,
                   textStyle: const TextStyle(fontWeight: FontWeight.bold),
                 ),
-                onPressed: () => provider.setStep(i),
+                onPressed: () => setState(() => data.setStep(i)),
                 child: Text(steps[i]),
               ),
             ),
@@ -77,31 +125,31 @@ class _SocialSecurityView extends StatelessWidget {
     );
   }
 
-  Widget _buildStepContent(BuildContext context, SocialSecurityProvider provider) {
-    switch (provider.currentStep) {
+  Widget _buildStepContent(BuildContext context) {
+    switch (data.currentStep) {
       case 0:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTextField('Average annual earned income (\$)', provider.incomeController),
-            _buildTextField('Current age (0 to 120)', provider.ageController),
-            _buildTextField('Social Security retirement age (62 to 70)', provider.retirementAgeController),
+            _buildTextField('Average annual earned income (\$)', data.incomeController),
+            _buildTextField('Current age (0 to 120)', data.ageController),
+            _buildTextField('Social Security retirement age (62 to 70)', data.retirementAgeController),
           ],
         );
       case 1:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTextField('Average annual earned income (\$)', provider.spouseIncomeController),
-            _buildTextField('Current age (0 to 120)', provider.spouseAgeController),
-            _buildTextField('Social Security retirement age (62 to 70)', provider.spouseRetirementAgeController),
+            _buildTextField('Average annual earned income (\$)', data.spouseIncomeController),
+            _buildTextField('Current age (0 to 120)', data.spouseAgeController),
+            _buildTextField('Social Security retirement age (62 to 70)', data.spouseRetirementAgeController),
           ],
         );
       case 2:
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildTextField('Social Security inflation rate (0% to 10%)', provider.inflationController),
+            _buildTextField('Social Security inflation rate (0% to 10%)', data.inflationController),
           ],
         );
       default:
@@ -124,13 +172,13 @@ class _SocialSecurityView extends StatelessWidget {
     );
   }
 
-  Widget _buildNavigation(BuildContext context, SocialSecurityProvider provider) {
+  Widget _buildNavigation(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        if (provider.currentStep > 0)
+        if (data.currentStep > 0)
           ElevatedButton(
-            onPressed: provider.prevStep,
+            onPressed: () => setState(() => data.prevStep()),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.teal,
               foregroundColor: Colors.white,
@@ -138,9 +186,9 @@ class _SocialSecurityView extends StatelessWidget {
             ),
             child: const Text('Previous'),
           ),
-        if (provider.currentStep < 2)
+        if (data.currentStep < 2)
           ElevatedButton(
-            onPressed: provider.nextStep,
+            onPressed: () => setState(() => data.nextStep()),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.teal,
               foregroundColor: Colors.white,
@@ -148,9 +196,9 @@ class _SocialSecurityView extends StatelessWidget {
             ),
             child: const Text('Next'),
           ),
-        if (provider.currentStep == 2)
+        if (data.currentStep == 2)
           ElevatedButton(
-            onPressed: provider.calculateResult,
+            onPressed: () => setState(() => data.calculateResult()),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.orange,
               foregroundColor: Colors.white,

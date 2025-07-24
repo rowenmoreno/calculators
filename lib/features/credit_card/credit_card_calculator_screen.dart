@@ -12,11 +12,11 @@ class _CreditCardCalculatorScreenState extends State<CreditCardCalculatorScreen>
   int _tabIndex = 0;
   
   // Text field controllers
-  final TextEditingController _balanceController = TextEditingController();
-  final TextEditingController _aprController = TextEditingController();
+  final TextEditingController _balanceController = TextEditingController(text: '1000');
+  final TextEditingController _aprController = TextEditingController(text: '18');
   final TextEditingController _additionalPaymentController = TextEditingController();
-  final TextEditingController _minPaymentPercentController = TextEditingController(text: '2');
-  final TextEditingController _minPaymentAmountController = TextEditingController(text: '25');
+  final TextEditingController _minPaymentPercentController = TextEditingController(text: '3');
+  final TextEditingController _minPaymentAmountController = TextEditingController(text: '35');
   
   bool skipDecember = false;
   String? resultMessage;
@@ -63,22 +63,30 @@ class _CreditCardCalculatorScreenState extends State<CreditCardCalculatorScreen>
     required double minAmount,
     required bool skipDecember,
   }) {
-    final monthlyRate = apr / 100 / 12;
+    final monthlyRate = (apr / 100) / 12;
     double currentBalance = balance;
     int months = 0;
     double totalInterest = 0;
+    int startMonth = DateTime.now().month - 1; // July = 6 (0-based)
     
     while (currentBalance > 0.01 && months < 1000) {
       months++;
-      if (skipDecember && months % 12 == 0) {
-        continue;
-      }
-      double minPayment = (currentBalance * minPercent / 100).clamp(minAmount, double.infinity);
-      double payment = minPayment + additionalPayment;
-      if (payment > currentBalance) payment = currentBalance;
+      
+      // Add interest at the start of each month
       double interest = currentBalance * monthlyRate;
       totalInterest += interest;
       currentBalance += interest;
+
+      // Skip payment in December (month 11)
+      int currentMonth = (startMonth + months - 1) % 12;
+      if (skipDecember && currentMonth == 11) {
+        continue;
+      }
+      
+      // Calculate and make payment
+      double minPayment = (currentBalance * minPercent / 100).clamp(minAmount, double.infinity);
+      double payment = minPayment + additionalPayment;
+      if (payment > currentBalance) payment = currentBalance;
       currentBalance -= payment;
     }
     

@@ -5,7 +5,7 @@ class CreditCardCalculatorScreen extends StatefulWidget {
   const CreditCardCalculatorScreen({super.key});
 
   @override
-  State<CreditCardCalculatorScreen> createState() => _CreditCardCalculatorScreenState();
+  State<CreditCardCalculatorScreen> createState() =>  _CreditCardCalculatorScreenState();
 }
 
 class _CreditCardCalculatorScreenState extends State<CreditCardCalculatorScreen> {
@@ -18,12 +18,6 @@ class _CreditCardCalculatorScreenState extends State<CreditCardCalculatorScreen>
   final TextEditingController _minPaymentPercentController = TextEditingController(text: '2');
   final TextEditingController _minPaymentAmountController = TextEditingController(text: '25');
   
-  // Data variables
-  double balance = 0;
-  double apr = 0;
-  double additionalPayment = 0;
-  double minPaymentPercent = 2;
-  double minPaymentAmount = 25;
   bool skipDecember = false;
   String? resultMessage;
 
@@ -45,11 +39,11 @@ class _CreditCardCalculatorScreenState extends State<CreditCardCalculatorScreen>
 
   void calculateResult() {
     final result = _calculateCreditCardPayoff(
-      balance: balance,
-      apr: apr,
-      additionalPayment: additionalPayment,
-      minPercent: minPaymentPercent,
-      minAmount: minPaymentAmount,
+      balance: double.tryParse(_balanceController.text) ?? 0,
+      apr: double.tryParse(_aprController.text) ?? 0,
+      additionalPayment: double.tryParse(_additionalPaymentController.text) ?? 0,
+      minPercent: double.tryParse(_minPaymentPercentController.text) ?? 2,
+      minAmount: double.tryParse(_minPaymentAmountController.text) ?? 25,
       skipDecember: skipDecember,
     );
     setState(() {
@@ -128,17 +122,12 @@ class _CreditCardCalculatorScreenState extends State<CreditCardCalculatorScreen>
                     balanceController: _balanceController,
                     aprController: _aprController,
                     additionalPaymentController: _additionalPaymentController,
-                    onBalanceChanged: (value) => setState(() => balance = value),
-                    onAprChanged: (value) => setState(() => apr = value),
-                    onAdditionalPaymentChanged: (value) => setState(() => additionalPayment = value),
                     onNext: () => setTabIndex(1),
                   )
                 : AssumptionsTab(
                     minPaymentPercentController: _minPaymentPercentController,
                     minPaymentAmountController: _minPaymentAmountController,
                     skipDecember: skipDecember,
-                    onMinPercentChanged: (value) => setState(() => minPaymentPercent = value),
-                    onMinAmountChanged: (value) => setState(() => minPaymentAmount = value),
                     onSkipDecemberChanged: (value) => setState(() => skipDecember = value),
                     onPrevious: () => setTabIndex(0),
                     onCalculate: calculateResult,
@@ -197,18 +186,12 @@ class CreditCardInfoTab extends StatelessWidget {
   final TextEditingController balanceController;
   final TextEditingController aprController;
   final TextEditingController additionalPaymentController;
-  final Function(double) onBalanceChanged;
-  final Function(double) onAprChanged;
-  final Function(double) onAdditionalPaymentChanged;
   final VoidCallback onNext;
 
   const CreditCardInfoTab({
     required this.balanceController,
     required this.aprController,
     required this.additionalPaymentController,
-    required this.onBalanceChanged,
-    required this.onAprChanged,
-    required this.onAdditionalPaymentChanged,
     required this.onNext,
     super.key,
   });
@@ -249,8 +232,6 @@ class AssumptionsTab extends StatelessWidget {
   final TextEditingController minPaymentPercentController;
   final TextEditingController minPaymentAmountController;
   final bool skipDecember;
-  final Function(double) onMinPercentChanged;
-  final Function(double) onMinAmountChanged;
   final Function(bool) onSkipDecemberChanged;
   final VoidCallback onPrevious;
   final VoidCallback onCalculate;
@@ -260,8 +241,6 @@ class AssumptionsTab extends StatelessWidget {
     required this.minPaymentPercentController,
     required this.minPaymentAmountController,
     required this.skipDecember,
-    required this.onMinPercentChanged,
-    required this.onMinAmountChanged,
     required this.onSkipDecemberChanged,
     required this.onPrevious,
     required this.onCalculate,
@@ -283,7 +262,6 @@ class AssumptionsTab extends StatelessWidget {
               border: OutlineInputBorder(),
             ),
             keyboardType: TextInputType.number,
-            onChanged: (v) => onMinPercentChanged(double.tryParse(v) ?? 2),
           ),
           const SizedBox(height: 16),
           TextField(
@@ -293,7 +271,6 @@ class AssumptionsTab extends StatelessWidget {
               border: OutlineInputBorder(),
             ),
             keyboardType: TextInputType.number,
-            onChanged: (v) => onMinAmountChanged(double.tryParse(v) ?? 25),
           ),
           const SizedBox(height: 16),
           CheckboxListTile(

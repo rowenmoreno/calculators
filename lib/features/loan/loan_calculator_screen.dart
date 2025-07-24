@@ -2,22 +2,48 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
-class LoanCalculatorData {
-  String balance = '';
-  String payment = '';
-  String rate = '';
-  String months = '';
-  String? resultSummary;
 
-  void calculate() {
-    final balanceValue = double.tryParse(balance.replaceAll(',', '')) ?? 0;
-    final currentPayment = double.tryParse(payment.replaceAll(',', '')) ?? 0;
-    final rateValue = double.tryParse(rate.replaceAll('%', '')) ?? 0;
-    final monthsValue = int.tryParse(months) ?? 0;
+
+class LoanCalculatorScreen extends StatefulWidget {
+  const LoanCalculatorScreen({Key? key}) : super(key: key);
+
+  @override
+  State<LoanCalculatorScreen> createState() => _LoanCalculatorScreenState();
+}
+
+class _LoanCalculatorScreenState extends State<LoanCalculatorScreen> {
+  // Text field controllers
+  final TextEditingController _balanceController = TextEditingController();
+  final TextEditingController _paymentController = TextEditingController();
+  final TextEditingController _rateController = TextEditingController();
+  final TextEditingController _monthsController = TextEditingController();
+
+  String? resultMessage;
+
+  @override
+  void dispose() {
+    _balanceController.dispose();
+    _paymentController.dispose();
+    _rateController.dispose();
+    _monthsController.dispose();
+    super.dispose();
+  }
+
+  void calculateResult() {
+    final result = _calculate();
+    setState(() {
+      resultMessage = _formatResult(result);
+    });
+  }
+
+  Map<String, double> _calculate() {
+    final balanceValue = double.tryParse(_balanceController.text.replaceAll(',', '')) ?? 0;
+    final currentPayment = double.tryParse(_paymentController.text.replaceAll(',', '')) ?? 0;
+    final rateValue = double.tryParse(_rateController.text.replaceAll('%', '')) ?? 0;
+    final monthsValue = int.tryParse(_monthsController.text) ?? 0;
 
     if (balanceValue <= 0 || monthsValue <= 0) {
-      resultSummary = null;
-      return;
+      return {};
     }
 
     double monthlyRate = (rateValue / 100) / 12;
@@ -64,21 +90,31 @@ class LoanCalculatorData {
       }
     }
 
-    double interestSavings = totalInterestOld - totalInterestNew;
-    double paymentDifference = newMonthlyPayment - currentPayment;
-    resultSummary = 'If you pay off your loan in $monthsValue month${monthsValue > 1 ? 's' : ''} instead of the scheduled $scheduledMonths month${scheduledMonths > 1 ? 's' : ''}, you will pay \$${interestSavings.abs().toStringAsFixed(2)} ${interestSavings >= 0 ? 'less' : 'more'} in interest, and your new monthly payment will be \$${newMonthlyPayment.toStringAsFixed(2)} (\$${paymentDifference.abs().toStringAsFixed(2)} ${paymentDifference >= 0 ? 'more' : 'less'} than your current monthly payment).';
+    return {
+      'newMonthlyPayment': newMonthlyPayment,
+      'scheduledMonths': scheduledMonths.toDouble(),
+      'monthsValue': monthsValue.toDouble(),
+      'interestSavings': totalInterestOld - totalInterestNew,
+      'paymentDifference': newMonthlyPayment - currentPayment,
+    };
   }
-}
 
-class LoanCalculatorScreen extends StatefulWidget {
-  const LoanCalculatorScreen({Key? key}) : super(key: key);
+  String _formatResult(Map<String, double> result) {
+    if (result.isEmpty) return '';
+    
+    final monthsValue = result['monthsValue']?.toInt() ?? 0;
+    final scheduledMonths = result['scheduledMonths']?.toInt() ?? 0;
+    final interestSavings = result['interestSavings'] ?? 0;
+    final newMonthlyPayment = result['newMonthlyPayment'] ?? 0;
+    final paymentDifference = result['paymentDifference'] ?? 0;
 
-  @override
-  State<LoanCalculatorScreen> createState() => _LoanCalculatorScreenState();
-}
-
-class _LoanCalculatorScreenState extends State<LoanCalculatorScreen> {
-  final data = LoanCalculatorData();
+    return 'If you pay off your loan in $monthsValue month${monthsValue > 1 ? 's' : ''} '
+           'instead of the scheduled $scheduledMonths month${scheduledMonths > 1 ? 's' : ''}, '
+           'you will pay \$${interestSavings.abs().toStringAsFixed(2)} ${interestSavings >= 0 ? 'less' : 'more'} in interest, '
+           'and your new monthly payment will be \$${newMonthlyPayment.toStringAsFixed(2)} '
+           '(\$${paymentDifference.abs().toStringAsFixed(2)} ${paymentDifference >= 0 ? 'more' : 'less'} '
+           'than your current monthly payment).';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -89,66 +125,61 @@ class _LoanCalculatorScreenState extends State<LoanCalculatorScreen> {
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Text('Current loan balance ( 24)', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
             TextField(
+              controller: _balanceController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
+                labelText: 'Current loan balance (\$)',
                 border: OutlineInputBorder(),
               ),
-              onChanged: (value) => setState(() => data.balance = value),
             ),
             const SizedBox(height: 24),
-            const Text('Current monthly payment ( 24)', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
             TextField(
+              controller: _paymentController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
+                labelText: 'Current monthly payment (\$)',
                 border: OutlineInputBorder(),
               ),
-              onChanged: (value) => setState(() => data.payment = value),
             ),
             const SizedBox(height: 24),
-            const Text('Annual percentage rate (0% to 40%)', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
             TextField(
+              controller: _rateController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
+                labelText: 'Annual percentage rate (0% to 40%)',
                 border: OutlineInputBorder(),
               ),
-              onChanged: (value) => setState(() => data.rate = value),
             ),
             const SizedBox(height: 24),
-            const Text('Number of months you want to have the loan paid off? (1 to 360)', style: TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 6),
             TextField(
+              controller: _monthsController,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(
+                labelText: 'Number of months to pay off loan (1 to 360)',
                 border: OutlineInputBorder(),
               ),
-              onChanged: (value) => setState(() => data.months = value),
             ),
+            if (resultMessage?.isNotEmpty == true) ...[
+              const SizedBox(height: 24),
+              Text(
+                resultMessage!,
+                style: const TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+            ],
             const SizedBox(height: 32),
-            Align(
-              alignment: Alignment.centerRight,
-              child: SizedBox(
-                width: 180,
-                height: 56,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    textStyle: const TextStyle(fontSize: 20),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      data.calculate();
-                    });
-                  },
-                  child: const Text('Calculate'),
-                ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+              onPressed: calculateResult,
+              child: const Text(
+                'Calculate',
+                style: TextStyle(fontSize: 20),
               ),
             ),
           ],

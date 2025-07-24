@@ -1,38 +1,5 @@
 import 'package:flutter/material.dart';
 
-class InvestmentGrowthData {
-  double currentInvestmentBalance;
-  double annualContributions;
-  double yearsToInvest;
-  double beforeTaxReturnFullyTaxable;
-  double beforeTaxReturnTaxDeferred;
-  double returnOnTaxFreeInvestment;
-  double marginalTaxBracket;
-
-  InvestmentGrowthData({
-    this.currentInvestmentBalance = 0,
-    this.annualContributions = 0,
-    this.yearsToInvest = 20,
-    this.beforeTaxReturnFullyTaxable = 8,
-    this.beforeTaxReturnTaxDeferred = 8,
-    this.returnOnTaxFreeInvestment = 5,
-    this.marginalTaxBracket = 25,
-  });
-
-  Map<String, double> calculate() {
-    // This is a simplified calculation and does not represent a real financial model.
-    // It is for demonstration purposes only.
-    final fullyTaxable = currentInvestmentBalance + (annualContributions * yearsToInvest) * (1 + (beforeTaxReturnFullyTaxable / 100));
-    final taxDeferred = currentInvestmentBalance + (annualContributions * yearsToInvest) * (1 + (beforeTaxReturnTaxDeferred / 100));
-    final taxFree = currentInvestmentBalance + (annualContributions * yearsToInvest) * (1 + (returnOnTaxFreeInvestment / 100));
-
-    return {
-      'fullyTaxable': fullyTaxable,
-      'taxDeferred': taxDeferred,
-      'taxFree': taxFree,
-    };
-  }
-}
 
 class InvestmentGrowthCalculatorScreen extends StatefulWidget {
   const InvestmentGrowthCalculatorScreen({super.key});
@@ -42,13 +9,80 @@ class InvestmentGrowthCalculatorScreen extends StatefulWidget {
 }
 
 class _InvestmentGrowthCalculatorScreenState extends State<InvestmentGrowthCalculatorScreen> {
-  final data = InvestmentGrowthData();
   int _tabIndex = 0;
+
+  // Text field controllers
+  final TextEditingController _currentInvestmentController = TextEditingController();
+  final TextEditingController _annualContributionsController = TextEditingController();
+  final TextEditingController _yearsToInvestController = TextEditingController(text: '20');
+  final TextEditingController _beforeTaxReturnFullyTaxableController = TextEditingController(text: '8');
+  final TextEditingController _beforeTaxReturnTaxDeferredController = TextEditingController(text: '8');
+  final TextEditingController _returnOnTaxFreeInvestmentController = TextEditingController(text: '5');
+  final TextEditingController _marginalTaxBracketController = TextEditingController(text: '25');
+
+  String? resultMessage;
+
+  @override
+  void dispose() {
+    _currentInvestmentController.dispose();
+    _annualContributionsController.dispose();
+    _yearsToInvestController.dispose();
+    _beforeTaxReturnFullyTaxableController.dispose();
+    _beforeTaxReturnTaxDeferredController.dispose();
+    _returnOnTaxFreeInvestmentController.dispose();
+    _marginalTaxBracketController.dispose();
+    super.dispose();
+  }
 
   void setTabIndex(int index) {
     setState(() {
       _tabIndex = index;
     });
+  }
+
+  void calculateResult() {
+    final result = _calculate();
+    setState(() {
+      resultMessage = _formatResult(result);
+    });
+  }
+
+  String _formatResult(Map<String, double> result) {
+    return 'Based on the assumptions you provided you could expect to accumulate '
+           '\$${result['fullyTaxable']?.toStringAsFixed(0)} in a fully-taxable account, '
+           '\$${result['taxDeferred']?.toStringAsFixed(0)} in a tax-deferred investment (adjusted for taxes), '
+           'or \$${result['taxFree']?.toStringAsFixed(0)} in a tax-free investment vehicle.';
+  }
+
+  Map<String, double> _calculate() {
+    // Get values from controllers
+    final currentInvestmentBalance = double.tryParse(_currentInvestmentController.text) ?? 0;
+    final annualContributions = double.tryParse(_annualContributionsController.text) ?? 0;
+    final yearsToInvest = double.tryParse(_yearsToInvestController.text) ?? 20;
+    final beforeTaxReturnFullyTaxable = double.tryParse(_beforeTaxReturnFullyTaxableController.text) ?? 8;
+    final beforeTaxReturnTaxDeferred = double.tryParse(_beforeTaxReturnTaxDeferredController.text) ?? 8;
+    final returnOnTaxFreeInvestment = double.tryParse(_returnOnTaxFreeInvestmentController.text) ?? 5;
+    final marginalTaxBracket = double.tryParse(_marginalTaxBracketController.text) ?? 25;
+
+    // This is a simplified calculation and does not represent a real financial model.
+    // It is for demonstration purposes only.
+    final fullyTaxable = currentInvestmentBalance + 
+        (annualContributions * yearsToInvest) * 
+        (1 + (beforeTaxReturnFullyTaxable / 100));
+        
+    final taxDeferred = currentInvestmentBalance + 
+        (annualContributions * yearsToInvest) * 
+        (1 + (beforeTaxReturnTaxDeferred / 100));
+        
+    final taxFree = currentInvestmentBalance + 
+        (annualContributions * yearsToInvest) * 
+        (1 + (returnOnTaxFreeInvestment / 100));
+
+    return {
+      'fullyTaxable': fullyTaxable,
+      'taxDeferred': taxDeferred,
+      'taxFree': taxFree,
+    };
   }
 
   @override
@@ -81,8 +115,21 @@ class _InvestmentGrowthCalculatorScreenState extends State<InvestmentGrowthCalcu
             child: IndexedStack(
               index: _tabIndex,
               children: [
-                SavingsTab(data: data, onNext: () => setTabIndex(1)),
-                AssumptionsTab(data: data, onPrevious: () => setTabIndex(0)),
+                SavingsTab(
+                  currentInvestmentController: _currentInvestmentController,
+                  annualContributionsController: _annualContributionsController,
+                  yearsToInvestController: _yearsToInvestController,
+                  onNext: () => setTabIndex(1),
+                ),
+                AssumptionsTab(
+                  beforeTaxReturnFullyTaxableController: _beforeTaxReturnFullyTaxableController,
+                  beforeTaxReturnTaxDeferredController: _beforeTaxReturnTaxDeferredController,
+                  returnOnTaxFreeInvestmentController: _returnOnTaxFreeInvestmentController,
+                  marginalTaxBracketController: _marginalTaxBracketController,
+                  onCalculate: calculateResult,
+                  resultMessage: resultMessage,
+                  onPrevious: () => setTabIndex(0),
+                ),
               ],
             ),
           ),
@@ -127,43 +174,56 @@ class TabButton extends StatelessWidget {
 }
 
 class SavingsTab extends StatelessWidget {
-  final InvestmentGrowthData data;
+  final TextEditingController currentInvestmentController;
+  final TextEditingController annualContributionsController;
+  final TextEditingController yearsToInvestController;
   final VoidCallback onNext;
-  const SavingsTab({required this.data, required this.onNext, super.key});
+
+  const SavingsTab({
+    required this.currentInvestmentController,
+    required this.annualContributionsController,
+    required this.yearsToInvestController,
+    required this.onNext,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextFormField(
-            initialValue: data.currentInvestmentBalance.toString(),
-            decoration:
-                const InputDecoration(labelText: 'Current investment balance (\$)'),
+          TextField(
+            controller: currentInvestmentController,
+            decoration: const InputDecoration(
+              labelText: 'Current investment balance (\$)',
+              border: OutlineInputBorder(),
+            ),
             keyboardType: TextInputType.number,
-            onChanged: (v) =>
-                data.currentInvestmentBalance = double.tryParse(v) ?? 0,
           ),
-          TextFormField(
-            initialValue: data.annualContributions.toString(),
-            decoration:
-                const InputDecoration(labelText: 'Annual contributions (\$)'),
+          const SizedBox(height: 16),
+          TextField(
+            controller: annualContributionsController,
+            decoration: const InputDecoration(
+              labelText: 'Annual contributions (\$)',
+              border: OutlineInputBorder(),
+            ),
             keyboardType: TextInputType.number,
-            onChanged: (v) =>
-                data.annualContributions = double.tryParse(v) ?? 0,
           ),
-          TextFormField(
-            initialValue: data.yearsToInvest.toString(),
-            decoration:
-                const InputDecoration(labelText: 'Number of years to invest (1 to 50)'),
+          const SizedBox(height: 16),
+          TextField(
+            controller: yearsToInvestController,
+            decoration: const InputDecoration(
+              labelText: 'Number of years to invest (1 to 50)',
+              border: OutlineInputBorder(),
+            ),
             keyboardType: TextInputType.number,
-            onChanged: (v) =>
-                data.yearsToInvest = double.tryParse(v) ?? 0,
           ),
           const Spacer(),
           ElevatedButton(
             onPressed: onNext,
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
             child: const Text('Next'),
           ),
         ],
@@ -173,48 +233,75 @@ class SavingsTab extends StatelessWidget {
 }
 
 class AssumptionsTab extends StatelessWidget {
-  final InvestmentGrowthData data;
+  final TextEditingController beforeTaxReturnFullyTaxableController;
+  final TextEditingController beforeTaxReturnTaxDeferredController;
+  final TextEditingController returnOnTaxFreeInvestmentController;
+  final TextEditingController marginalTaxBracketController;
+  final VoidCallback onCalculate;
   final VoidCallback onPrevious;
-  const AssumptionsTab(
-      {required this.data, required this.onPrevious, super.key});
+  final String? resultMessage;
+
+  const AssumptionsTab({
+    required this.beforeTaxReturnFullyTaxableController,
+    required this.beforeTaxReturnTaxDeferredController,
+    required this.returnOnTaxFreeInvestmentController,
+    required this.marginalTaxBracketController,
+    required this.onCalculate,
+    required this.onPrevious,
+    required this.resultMessage,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(16.0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          TextFormField(
-            initialValue: data.beforeTaxReturnFullyTaxable.toString(),
+          TextField(
+            controller: beforeTaxReturnFullyTaxableController,
             decoration: const InputDecoration(
-                labelText:
-                    'Before-tax return on fully-taxable investment (-12% to 12%)'),
+              labelText: 'Before-tax return on fully-taxable investment (-12% to 12%)',
+              border: OutlineInputBorder(),
+            ),
             keyboardType: TextInputType.number,
-            onChanged: (v) => data.beforeTaxReturnFullyTaxable = double.tryParse(v) ?? 0,
           ),
-          TextFormField(
-            initialValue: data.beforeTaxReturnTaxDeferred.toString(),
+          const SizedBox(height: 16),
+          TextField(
+            controller: beforeTaxReturnTaxDeferredController,
             decoration: const InputDecoration(
-                labelText:
-                    'Before-tax return on tax-deferred investment (-12% to 12%)'),
+              labelText: 'Before-tax return on tax-deferred investment (-12% to 12%)',
+              border: OutlineInputBorder(),
+            ),
             keyboardType: TextInputType.number,
-            onChanged: (v) => data.beforeTaxReturnTaxDeferred = double.tryParse(v) ?? 0,
           ),
-          TextFormField(
-            initialValue: data.returnOnTaxFreeInvestment.toString(),
+          const SizedBox(height: 16),
+          TextField(
+            controller: returnOnTaxFreeInvestmentController,
             decoration: const InputDecoration(
-                labelText: 'Return on tax-free investment (-12% to 12%)'),
+              labelText: 'Return on tax-free investment (-12% to 12%)',
+              border: OutlineInputBorder(),
+            ),
             keyboardType: TextInputType.number,
-            onChanged: (v) => data.returnOnTaxFreeInvestment = double.tryParse(v) ?? 0,
           ),
-          TextFormField(
-            initialValue: data.marginalTaxBracket.toString(),
-            decoration:
-                const InputDecoration(labelText: 'Marginal tax bracket (0% to 75%)'),
+          const SizedBox(height: 16),
+          TextField(
+            controller: marginalTaxBracketController,
+            decoration: const InputDecoration(
+              labelText: 'Marginal tax bracket (0% to 75%)',
+              border: OutlineInputBorder(),
+            ),
             keyboardType: TextInputType.number,
-            onChanged: (v) =>
-                data.marginalTaxBracket = double.tryParse(v) ?? 0,
           ),
+          if (resultMessage != null) ...[
+            const SizedBox(height: 16),
+            Text(
+              resultMessage!,
+              style: const TextStyle(fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+          ],
           const Spacer(),
           Row(
             children: [
@@ -227,24 +314,8 @@ class AssumptionsTab extends StatelessWidget {
               const SizedBox(width: 16),
               Expanded(
                 child: ElevatedButton(
-                  onPressed: () {
-                    final result = data.calculate();
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: const Text('Result'),
-                        content: Text(
-                            'Based on the assumptions you provided you could expect to accumulate \$${result['fullyTaxable']?.toStringAsFixed(0)} in a fully-taxable account, \$${result['taxDeferred']?.toStringAsFixed(0)} in a tax-deferred investment (adjusted for taxes), or \$${result['taxFree']?.toStringAsFixed(0)} in a tax-free investment vehicle.'),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.of(context).pop(),
-                            child: const Text('OK'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
+                  onPressed: onCalculate,
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.teal),
                   child: const Text('Calculate'),
                 ),
               ),

@@ -10,21 +10,47 @@ class RetirementCalculatorScreen extends StatefulWidget {
 class _RetirementCalculatorScreenState extends State<RetirementCalculatorScreen> {
   // Constants
   static const List<String> incomeFields = [
-    'Salary',
-    'Investment Income',
-    'Pension',
-    'Social Security',
-    'Other Income'
+    'Wages, salary and tips',
+    'Alimony, child support (received)',
+    'Dividends from stocks, etc.',
+    'Interest on savings accounts, CDs, etc.',
+    'Social Security benefits',
+    'Pensions',
+    'Other income'
   ];
   
   static const List<String> expenseFields = [
-    'Housing',
-    'Transportation',
-    'Healthcare',
-    'Food & Dining',
-    'Entertainment',
-    'Insurance',
-    'Other Expenses'
+    'Mortgage payment or rent (\$)',
+    'Vacation home (mortgage) (\$)',
+    'Automobile loan(s) (\$)',
+    'Personal loan(s) (\$)',
+    'Charge accounts (\$)',
+    'Federal income taxes (\$)',
+    'State income taxes (\$)',
+    'FICA (Social Security taxes) (\$)',
+    'Real estate taxes (\$)',
+    'Other taxes (\$)',
+    'Utilities (\$)',
+    'Household repairs and maintenance (\$)',
+    'Food (\$)',
+    'Clothing and laundry (\$)',
+    'Educational expenses (\$)',
+    'Child care (\$)',
+    'Automobile expenses (gas, repairs, etc.) (\$)',
+    'Other transportation expenses (\$)',
+    'Life insurance premiums (\$)',
+    'Homeowners (renters) insurance (\$)',
+    'Automobile insurance (\$)',
+    'Medical, dental and disability insurance (\$)',
+    'Entertainment and dining (\$)',
+    'Recreation and travel (\$)',
+    'Club dues (\$)',
+    'Hobbies (\$)',
+    'Gifts (\$)',
+    'Major home improvements and furnishings (\$)',
+    'Professional services (\$)',
+    'Charitable contributions (\$)',
+    'Other and miscellaneous expenses (\$)'
   ];
 
   // Controllers
@@ -136,20 +162,7 @@ class _RetirementCalculatorScreenState extends State<RetirementCalculatorScreen>
     required double postRetirementNet,
     required double difference,
   }) {
-    return '''
-    $_figuresType Summary:
-    Pre-Retirement:
-      Total Income: \$${totalPreIncome.toStringAsFixed(2)}
-      Total Expenses: \$${totalPreExpenses.toStringAsFixed(2)}
-      Net: \$${preRetirementNet.toStringAsFixed(2)}
-      
-    Post-Retirement:
-      Total Income: \$${totalPostIncome.toStringAsFixed(2)}
-      Total Expenses: \$${totalPostExpenses.toStringAsFixed(2)}
-      Net: \$${postRetirementNet.toStringAsFixed(2)}
-      
-    Difference in Net: \$${difference.toStringAsFixed(2)}
-    ''';
+    return 'Based on your input, your income during retirement will remain constant at \$${totalPostIncome.toStringAsFixed(2)}, your expenses will remain constant at \$${totalPostExpenses.toStringAsFixed(2)}, and your net cash flow will remain constant at \$${postRetirementNet.toStringAsFixed(2)}.';
   }
 
   Widget _buildIncomeExpenseTable({

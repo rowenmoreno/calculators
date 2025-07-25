@@ -40,13 +40,7 @@ class _SocialSecurityScreenState extends State<SocialSecurityScreen> {
   }
 
   void _setupControllerListeners() {
-    _incomeController.addListener(_calculateResult);
-    _ageController.addListener(_calculateResult);
-    _retirementAgeController.addListener(_calculateResult);
-    _spouseIncomeController.addListener(_calculateResult);
-    _spouseAgeController.addListener(_calculateResult);
-    _spouseRetirementAgeController.addListener(_calculateResult);
-    _inflationController.addListener(_calculateResult);
+    // Removed automatic calculation on input change
   }
 
   @override
@@ -62,7 +56,6 @@ class _SocialSecurityScreenState extends State<SocialSecurityScreen> {
   }
 
   void _calculateResult() {
-    if (_currentStep != 2) return;
 
     try {
       final income = double.parse(_incomeController.text);
@@ -174,20 +167,11 @@ class _SocialSecurityScreenState extends State<SocialSecurityScreen> {
     required double inflation,
   }) {
     final yearlyInflationFactor = 1 + inflation;
+    final totalMonthlyBenefit = monthlyBenefit + spouseMonthlyBenefit;
+    final annualBenefit = totalMonthlyBenefit * 12;
+    final replacementRate = annualBenefit / (double.parse(_incomeController.text) + double.parse(_spouseIncomeController.text)) * 100;
     
-    return '''Social Security Benefit Estimate:
-
-Your monthly benefit at age $retirementAge: \${_formatCurrency(monthlyBenefit)}
-${spouseMonthlyBenefit > 0 ? "Spouse's monthly benefit at age $spouseRetirementAge: \${_formatCurrency(spouseMonthlyBenefit)}\n" : ""}
-Combined monthly benefit: \${_formatCurrency(monthlyBenefit + spouseMonthlyBenefit)}
-
-Estimated future values (with $inflation% annual inflation):
-After 5 years: \${_formatCurrency((monthlyBenefit + spouseMonthlyBenefit) * pow(yearlyInflationFactor, 5))}
-After 10 years: \${_formatCurrency((monthlyBenefit + spouseMonthlyBenefit) * pow(yearlyInflationFactor, 10))}
-After 20 years: \${_formatCurrency((monthlyBenefit + spouseMonthlyBenefit) * pow(yearlyInflationFactor, 20))}
-
-Note: These are estimates based on current rules and simplified calculations.
-Please consult the Social Security Administration for official benefit calculations.''';
+    return '''It appears that Social Security will replace approximately ${replacementRate.toStringAsFixed(1)}% of your current combined income of \$${_formatCurrency(double.parse(_incomeController.text) + double.parse(_spouseIncomeController.text))}.\n\n''';
   }
 
   String _formatCurrency(double value) {
@@ -249,7 +233,6 @@ Please consult the Social Security Administration for official benefit calculati
                 ),
                 onPressed: () => setState(() {
                   _currentStep = i;
-                  _calculateResult();
                 }),
                 child: Text(steps[i]),
               ),
@@ -314,7 +297,6 @@ Please consult the Social Security Administration for official benefit calculati
           ElevatedButton(
             onPressed: () => setState(() {
               _currentStep--;
-              _calculateResult();
             }),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.teal,
@@ -327,7 +309,6 @@ Please consult the Social Security Administration for official benefit calculati
           ElevatedButton(
             onPressed: () => setState(() {
               _currentStep++;
-              _calculateResult();
             }),
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.teal,

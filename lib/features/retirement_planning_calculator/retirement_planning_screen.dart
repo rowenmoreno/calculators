@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:math' show pow, min;
 
-class RetirementSavingsScreen extends StatefulWidget {
-  const RetirementSavingsScreen({Key? key}) : super(key: key);
+class RetirementPlanningScreen extends StatefulWidget {
+  const RetirementPlanningScreen({Key? key}) : super(key: key);
 
   @override
-  State<RetirementSavingsScreen> createState() => _RetirementSavingsScreenState();
+  State<RetirementPlanningScreen> createState() => _RetirementPlanningScreenState();
 }
 
-class _RetirementSavingsScreenState extends State<RetirementSavingsScreen> {
+class _RetirementPlanningScreenState extends State<RetirementPlanningScreen> {
   // Controllers
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _annualIncomeController = TextEditingController();
@@ -279,7 +279,7 @@ Please consult a financial advisor for personalized advice.''';
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Retirement Savings Planner'),
+        title: const Text('Retirement Planning Calculator'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24.0),

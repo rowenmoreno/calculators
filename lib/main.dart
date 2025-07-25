@@ -1,9 +1,9 @@
 
 import 'package:calculators/features/loan/loan_calculator_screen.dart';
 import 'package:calculators/features/retirement/retirement_calculator_screen.dart';
-import 'package:calculators/features/retirement_savings/retirement_savings_screen.dart';
+import 'package:calculators/features/retirement_planning_calculator/retirement_planning_screen.dart';
 import 'package:flutter/material.dart';
-import 'features/retirement_planner/retirement_planner_screen.dart';
+import 'features/retirement_savings_calculator/retirement_savings_screen.dart';
 import 'package:calculators/features/social_security/social_security_screen.dart';
 import 'package:calculators/features/credit_card/credit_card_calculator_screen.dart';
 import 'package:calculators/features/four_o_one_k/four_o_one_k_calculator_screen.dart';
@@ -58,7 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _navigateToRetirementPlanner() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => const RetirementPlannerScreen(),
+        builder: (context) => const RetirementSavingsScreen(),
       ),
     );
   }
@@ -66,7 +66,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _navigateToRetirementSavingsPlanner() {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (context) => const RetirementSavingsScreen(),
+        builder: (context) => const RetirementPlanningScreen(),
       ),
     );
   }
@@ -103,12 +103,12 @@ class _MyHomePageState extends State<MyHomePage> {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _navigateToRetirementPlanner,
-              child: const Text('Retirement Planner'),
+              child: const Text('Retirement Savings Calculator'),
             ),
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: _navigateToRetirementSavingsPlanner,
-              child: const Text('Retirement Savings Planner'),
+              child: const Text('Retirement Planning Calculator'),
             ),
             const SizedBox(height: 16),
             ElevatedButton(

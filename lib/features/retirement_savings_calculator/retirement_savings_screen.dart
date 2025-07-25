@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:math' show pow, min;
 
-class RetirementPlannerScreen extends StatefulWidget {
-  const RetirementPlannerScreen({Key? key}) : super(key: key);
+class RetirementSavingsScreen extends StatefulWidget {
+  const RetirementSavingsScreen({Key? key}) : super(key: key);
 
   @override
-  State<RetirementPlannerScreen> createState() => _RetirementPlannerScreenState();
+  State<RetirementSavingsScreen> createState() => _RetirementSavingsScreenState();
 }
 
-class _RetirementPlannerScreenState extends State<RetirementPlannerScreen> {
+class _RetirementSavingsScreenState extends State<RetirementSavingsScreen> {
   // Constants
   static const List<String> maritalStatusOptions = ['Single', 'Married'];
 
@@ -241,7 +241,7 @@ Please consult a financial advisor for personalized advice.''';
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Retirement Planner'),
+        title: const Text('Retirement Savings Calculator'),
         backgroundColor: Colors.teal,
         foregroundColor: Colors.white,
       ),

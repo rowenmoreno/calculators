@@ -162,7 +162,11 @@ class _RetirementCalculatorScreenState extends State<RetirementCalculatorScreen>
     required double postRetirementNet,
     required double difference,
   }) {
-    return 'Based on your input, your income during retirement will remain constant at \$${totalPostIncome.toStringAsFixed(2)}, your expenses will remain constant at \$${totalPostExpenses.toStringAsFixed(2)}, and your net cash flow will remain constant at \$${postRetirementNet.toStringAsFixed(2)}.';
+    String incomeChange = totalPostIncome > totalPreIncome ? 'increase' : 'decrease';
+    String expenseChange = totalPostExpenses > totalPreExpenses ? 'increase' : 'decrease';
+    String netChange = postRetirementNet > preRetirementNet ? 'increase' : 'decrease';
+    
+    return 'Based on your input, your income during retirement will $incomeChange from \$${totalPreIncome.toStringAsFixed(0)} to \$${totalPostIncome.toStringAsFixed(0)}, your expenses will $expenseChange from \$${totalPreExpenses.toStringAsFixed(0)} to \$${totalPostExpenses.toStringAsFixed(0)}, and your net cash flow will $netChange from \$${preRetirementNet.toStringAsFixed(0)} to \$${postRetirementNet.toStringAsFixed(0)}.';
   }
 
   Widget _buildIncomeExpenseTable({
@@ -271,17 +275,6 @@ class _RetirementCalculatorScreenState extends State<RetirementCalculatorScreen>
                 padding: const EdgeInsets.symmetric(vertical: 12.0),
                 child: Text(_resultSummary!),
               ),
-              Center(
-                child: ElevatedButton(
-                  onPressed: () => _emailResults(context),
-                  child: const Text('Email Results'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.teal,
-                    foregroundColor: Colors.white,
-                    textStyle: const TextStyle(fontSize: 16),
-                  ),
-                ),
-              ),
             ],
           ],
         );
@@ -290,21 +283,6 @@ class _RetirementCalculatorScreenState extends State<RetirementCalculatorScreen>
     }
   }
 
-  void _emailResults(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Email Results'),
-        content: const Text('Email functionality is not implemented.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {

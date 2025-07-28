@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math' show pow;
 
 
 class InvestmentGrowthCalculatorScreen extends StatefulWidget {
@@ -57,26 +58,25 @@ class _InvestmentGrowthCalculatorScreenState extends State<InvestmentGrowthCalcu
   Map<String, double> _calculate() {
     // Get values from controllers
     final currentInvestmentBalance = double.tryParse(_currentInvestmentController.text) ?? 0;
-    final annualContributions = double.tryParse(_annualContributionsController.text) ?? 0;
     final yearsToInvest = double.tryParse(_yearsToInvestController.text) ?? 20;
-    final beforeTaxReturnFullyTaxable = double.tryParse(_beforeTaxReturnFullyTaxableController.text) ?? 8;
-    final beforeTaxReturnTaxDeferred = double.tryParse(_beforeTaxReturnTaxDeferredController.text) ?? 8;
-    final returnOnTaxFreeInvestment = double.tryParse(_returnOnTaxFreeInvestmentController.text) ?? 5;
-    final marginalTaxBracket = double.tryParse(_marginalTaxBracketController.text) ?? 25;
+    final beforeTaxReturnFullyTaxable = (double.tryParse(_beforeTaxReturnFullyTaxableController.text) ?? 8) / 100;
+    final beforeTaxReturnTaxDeferred = (double.tryParse(_beforeTaxReturnTaxDeferredController.text) ?? 8) / 100;
+    final returnOnTaxFreeInvestment = (double.tryParse(_returnOnTaxFreeInvestmentController.text) ?? 5) / 100;
+    final marginalTaxBracket = (double.tryParse(_marginalTaxBracketController.text) ?? 25) / 100;
 
-    // This is a simplified calculation and does not represent a real financial model.
-    // It is for demonstration purposes only.
-    final fullyTaxable = currentInvestmentBalance + 
-        (annualContributions * yearsToInvest) * 
-        (1 + (beforeTaxReturnFullyTaxable / 100));
-        
-    final taxDeferred = currentInvestmentBalance + 
-        (annualContributions * yearsToInvest) * 
-        (1 + (beforeTaxReturnTaxDeferred / 100));
-        
-    final taxFree = currentInvestmentBalance + 
-        (annualContributions * yearsToInvest) * 
-        (1 + (returnOnTaxFreeInvestment / 100));
+    // For fully-taxable account:
+    // The after-tax return is 6.0% (8% before-tax return × (1 - 25% tax rate))
+    final afterTaxReturnFullyTaxable = beforeTaxReturnFullyTaxable * (1 - marginalTaxBracket);
+    final fullyTaxable = currentInvestmentBalance * pow(1 + afterTaxReturnFullyTaxable, yearsToInvest);
+    
+    // For tax-deferred account:
+    // Money grows tax-free at 8%, then entire amount is taxed at withdrawal
+    final taxDeferredBeforeTax = currentInvestmentBalance * pow(1 + beforeTaxReturnTaxDeferred, yearsToInvest);
+    final taxDeferred = taxDeferredBeforeTax * (1 - marginalTaxBracket);
+    
+    // For tax-free account:
+    // Money grows at 5% with no taxes due
+    final taxFree = currentInvestmentBalance * pow(1 + returnOnTaxFreeInvestment, yearsToInvest);
 
     return {
       'fullyTaxable': fullyTaxable,

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "329106725592",
+    "project_id": "videos-992c8",
+    "storage_bucket": "videos-992c8.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:329106725592:android:d2111a29c3f236819715ad",
+        "android_client_info": {
+          "package_name": "com.example.calculators"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBdumQU3NxPzs13U0ICkHBlzZp1VtC8zRY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

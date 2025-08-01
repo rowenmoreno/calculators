@@ -1,6 +1,7 @@
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'widgets/firebase_video_player.dart';
 
 class FirebaseVideoPlayerScreen extends StatefulWidget {
   final String videoName; // The Firebase Storage URL or path to the video
@@ -79,38 +80,8 @@ class _FirebaseVideoPlayerScreenState extends State<FirebaseVideoPlayerScreen> {
       );
     }
 
-    return Center(
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          AspectRatio(
-            aspectRatio: _controller.value.aspectRatio,
-            child: VideoPlayer(_controller),
-          ),
-          GestureDetector(
-            onTap: () {
-              setState(() {
-                _controller.value.isPlaying
-                    ? _controller.pause()
-                    : _controller.play();
-              });
-            },
-            child: Container(
-              width: 60,
-              height: 60,
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(30),
-              ),
-              child: Icon(
-                _controller.value.isPlaying ? Icons.pause : Icons.play_arrow,
-                color: Colors.white,
-                size: 30,
-              ),
-            ),
-          ),
-        ],
-      ),
+    return FirebaseVideoPlayer(
+      controller: _controller,
     );
   }
 }

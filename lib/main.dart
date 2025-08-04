@@ -10,6 +10,7 @@ import 'package:calculators/features/calculators/four_o_one_k/four_o_one_k_calcu
 import 'package:calculators/features/calculators/investment_growth/investment_growth_calculator_screen.dart';
 import 'package:calculators/features/calculators/payroll_withholdings/payroll_withholdings_calculator_screen.dart';
 import 'package:calculators/features/video_player/firebase_video_player_screen.dart';
+import 'package:calculators/features/video_player/video_carousel_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -83,6 +84,14 @@ class _MyHomePageState extends State<MyHomePage> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) => const SocialSecurityScreen(),
+      ),
+    );
+  }
+
+  void _navigateToVideoCarousel() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const VideoCarouselScreen(),
       ),
     );
   }
@@ -179,6 +188,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 );
               },
               child: const Text('Watch Video'),
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: _navigateToVideoCarousel,
+              child: const Text('Video Carousel'),
             ),
           ],
         ),

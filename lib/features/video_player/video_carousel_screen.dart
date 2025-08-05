@@ -1,6 +1,7 @@
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'dart:math';
 import 'widgets/firebase_video_player.dart';
 
 class VideoCarouselScreen extends StatefulWidget {
@@ -12,25 +13,52 @@ class VideoCarouselScreen extends StatefulWidget {
 
 class _VideoCarouselScreenState extends State<VideoCarouselScreen> {
   final PageController _pageController = PageController();
-  final List<String> _videoNames = ['video_1.mp4', 'video_2.mp4', 'video_3.mp4'];
-  final List<VideoPlayerController> _controllers = [];
-  final List<bool> _isLoading = [true, true, true];
-  final List<String?> _errors = [null, null, null];
+  late List<String> _videoNames;
+  late List<VideoPlayerController> _controllers;
+  late List<bool> _isLoading;
+  late List<String?> _errors;
   int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    _initializeVideoList();
     _initializeVideos();
+  }
+
+  void _initializeVideoList() {
+    // Fixed list of all videos from video_1 to video_10
+    _videoNames = [
+      'video_1.mp4',
+      'video_2.mp4', 
+      'video_3.mp4',
+      'video_4.mp4',
+      'video_5.mp4',
+      'video_6.mp4',
+      'video_7.mp4',
+      'video_8.mp4',
+      'video_9.mp4',
+      'video_10.mp4',
+    ];
+    
+    // Initialize controllers, loading states, and errors lists
+    _controllers = [];
+    _isLoading = List.generate(_videoNames.length, (index) => true);
+    _errors = List.generate(_videoNames.length, (index) => null);
+    
+    // Set random starting index
+    _currentIndex = Random().nextInt(_videoNames.length);
   }
 
   Future<void> _initializeVideos() async {
     for (int i = 0; i < _videoNames.length; i++) {
       await _initializeVideo(i);
     }
-    // Ensure first video plays after all are loaded
-    if (_controllers.isNotEmpty && _controllers[0].value.isInitialized) {
-      _controllers[0].play();
+    // Ensure the randomly selected video plays after all are loaded
+    if (_controllers.isNotEmpty && _currentIndex < _controllers.length && _controllers[_currentIndex].value.isInitialized) {
+      _controllers[_currentIndex].play();
+      // Jump to the random starting page
+      _pageController.jumpToPage(_currentIndex);
     }
   }
 
